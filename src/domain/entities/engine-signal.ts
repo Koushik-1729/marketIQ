@@ -1,0 +1,34 @@
+import type { SignalExplanation } from "@/domain/entities/signal-explanation";
+
+export type EngineSignal = {
+  id: string;
+  ticker: string;
+  company: string;
+  sector: string;
+  eventType: string;
+  eventSummary: string;
+  sentiment: "positive" | "negative" | "neutral" | "mixed";
+  confidence: number;
+  impactScore: number;
+  finalScore: number;
+  freshnessMinutes: number;
+  sourceCount: number;
+  riskLevel: "low" | "medium" | "high";
+  conflictFlag: boolean;
+  conflictReason: string | null;
+  marketContext: string;
+  priceValidation: string;
+  priceMove?: string;
+  volumeRatio?: string;
+  confirmationStatus?: "CONFIRMED" | "WEAK" | "NEUTRAL" | "CONTRADICTION" | "NO_DATA";
+  sectorMomentumStatus?: "STRONG" | "WEAK" | "NEUTRAL" | "NO_DATA";
+  sectorMomentumNote?: string;
+  institutionalFlowStatus?: string;
+  institutionalFlowNote?: string;
+  dealValidationStatus?: string;
+  dealValidationNote?: string;
+  narrativeState: string;
+  sources: string[];
+  metaLabel: "keep" | "downgrade" | "discard";
+  explanation: SignalExplanation;
+};
