@@ -1,16 +1,39 @@
 import { unstable_noStore as noStore } from "next/cache";
+import { cache } from "react";
 import type { DashboardData } from "@/application/dto/dashboard-data";
 import { engineRuntime } from "@/application/runtime/engine-runtime";
 import { rankSignalsForWatchlist } from "@/domain/services/personalize-signals";
+import { withTimeoutValue } from "@/lib/async-utils";
 
-export async function getDashboardData(): Promise<DashboardData> {
+export const getDashboardData = cache(async function getDashboardData(): Promise<DashboardData> {
   noStore();
 
   try {
     const [marketContext, topSignals, watchlist] = await Promise.all([
-      engineRuntime.marketContextRepository.getLatest(),
-      engineRuntime.signalRepository.findRecent(24),
-      engineRuntime.watchlistRepository.getPrimaryWatchlist()
+      withTimeoutValue(
+        () => engineRuntime.marketContextRepository.getLatest(),
+        {
+          niftyTrend: "neutral" as const,
+          bankNiftyTrend: "neutral" as const,
+          giftNiftyChange: 0,
+          indiaVix: 0,
+          fiiFlowCr: 0,
+          diiFlowCr: 0,
+          globalCues: "mixed" as const,
+          sectorStrength: {}
+        }
+      ),
+      withTimeoutValue(() => engineRuntime.signalRepository.findRecent(24), []),
+      withTimeoutValue(
+        () => engineRuntime.watchlistRepository.getPrimaryWatchlist(),
+        {
+          userId: "offline-user",
+          tickers: [],
+          sectors: [],
+          themes: [],
+          riskTolerance: "medium" as const
+        }
+      )
     ]);
 
     const rankedWatchlistSignals = rankSignalsForWatchlist(topSignals, {
@@ -27,16 +50,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       watchlistSignals: rankedWatchlistSignals.slice(0, 6),
       riskSignals: topSignals.filter((signal) => signal.riskLevel === "high")
     };
-  } catch (error) {
-    console.error("[dashboard] failed to load persisted dashboard data", error);
-
+  } catch {
     return {
-      marketMood: "Data temporarily unavailable",
-      giftNifty: "0.00",
-      fiiDii: "FII: 0 Cr | DII: 0 Cr",
+      marketMood: "Live market data unavailable",
+      giftNifty: "Unavailable",
+      fiiDii: "Unavailable",
       topSignals: [],
       watchlistSignals: [],
       riskSignals: []
     };
   }
-}
+});

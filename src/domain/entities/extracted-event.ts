@@ -26,4 +26,6 @@ export type ExtractedEvent = {
   evidence: string[];
   sourceName: string;
   sourceKind: string;
+  sourceUrl: string;
+  pdfUrl?: string;
 };

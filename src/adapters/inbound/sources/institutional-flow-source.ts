@@ -19,14 +19,14 @@ export async function fetchInstitutionalFlows(): Promise<InstitutionalFlow[]> {
       
       return {
         id: "temp", // will be ignored by Prisma creation
-        date: parsedDate,
+        date: parsedDate.toISOString(),
         investorType,
         marketSegment: "EQUITY",
         buyValue: parseFloat(item.buyValue),
         sellValue: parseFloat(item.sellValue),
         netValue: parseFloat(item.netValue),
         source: "NSE_OFFICIAL",
-        createdAt: new Date()
+        createdAt: new Date().toISOString()
       };
     });
 

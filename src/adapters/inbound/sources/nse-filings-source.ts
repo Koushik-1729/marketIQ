@@ -1,7 +1,7 @@
 import { BaseHttpSourceAdapter } from "@/adapters/inbound/sources/base-http-source";
 import type { RawDocument } from "@/domain/entities/raw-document";
 import type { RawDocumentSourcePort } from "@/domain/ports/raw-document-source";
-import { stripMarkup } from "@/lib/source-utils";
+import { stripMarkup, toAbsoluteUrl } from "@/lib/source-utils";
 
 function parseNseRows(html: string) {
   const rows =
@@ -17,12 +17,16 @@ function parseNseRows(html: string) {
         return null;
       }
 
+      const pdfMatch = row.match(/href="([^"]+\.pdf[^"]*)"/i);
+      const pdfUrl = pdfMatch ? toAbsoluteUrl(pdfMatch[1], "https://www.nseindia.com") : undefined;
+
       return {
         ticker: cells[0],
         subject: cells[1],
         publishedAt: cells[2],
         category: detectNseCategory(cells[1]),
-        announcementType: detectAnnouncementType(cells[1])
+        announcementType: detectAnnouncementType(cells[1]),
+        pdfUrl
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
@@ -87,18 +91,18 @@ export class NseFilingsSourceAdapter
       ];
     }
 
-    return rows.map((row, index) =>
-      this.buildRawDocument({
+    return rows.map((row, index) => {
+      const doc = this.buildRawDocument({
         sourceName: "NSE Filing",
         sourceKind: "filing",
         title: `${row.ticker} ${row.subject}`,
-        url: `${this.listingUrl}#row-${index}`,
+        url: row.pdfUrl ?? `${this.listingUrl}#row-${index}`,
         publishedAt: row.publishedAt,
         content: `${row.ticker} ${row.subject}`,
         rawPayload: html,
         rawPayloadFormat: "html",
-        tickersHint: [row.ticker]
-        ,
+        tickersHint: [row.ticker],
+        pdfUrl: row.pdfUrl,
         metadata: {
           ticker: row.ticker,
           announcementType: row.announcementType,
@@ -107,7 +111,13 @@ export class NseFilingsSourceAdapter
           companyName: row.ticker,
           earningsCandidate: isEarningsSubject(row.subject)
         }
-      })
-    );
+      });
+      if (row.pdfUrl) {
+        console.log(`[ingestion] pdfUrl extracted: ${row.pdfUrl}`);
+      } else {
+        console.log(`[ingestion] no pdfUrl for doc: ${doc.url}`);
+      }
+      return doc;
+    });
   }
 }

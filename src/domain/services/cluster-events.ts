@@ -1,6 +1,10 @@
 import type { EnrichedEvent } from "@/domain/entities/enriched-event";
 import type { EventCluster } from "@/domain/entities/event-cluster";
 
+function isDefined<T>(value: T | undefined | null): value is T {
+  return value !== undefined && value !== null;
+}
+
 export function clusterEvents(events: EnrichedEvent[]) {
   const buckets = new Map<string, EnrichedEvent[]>();
 
@@ -26,6 +30,8 @@ export function clusterEvents(events: EnrichedEvent[]) {
       eventIds: grouped.map((item) => item.id),
       sourceNames: uniqueSources,
       sourceKinds: Array.from(new Set(grouped.map((item) => item.sourceKind))),
+      sourceUrls: Array.from(new Set(grouped.map((item) => item.sourceUrl).filter(isDefined))),
+      pdfUrls: Array.from(new Set(grouped.map((item) => item.pdfUrl).filter(isDefined))),
       summary: grouped[0].evidence[0],
       firstSeenAt: grouped
         .map((item) => item.eventAt)

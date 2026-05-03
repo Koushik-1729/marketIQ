@@ -45,6 +45,7 @@ export type DealReportItem = {
 
 export type LatestReport = {
   generatedAt: string;
+  dataStatus: "live" | "degraded";
   marketMood: string;
   giftNifty: string;
   fiiDii: string;

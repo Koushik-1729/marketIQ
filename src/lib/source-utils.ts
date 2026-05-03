@@ -4,6 +4,11 @@ export { simpleHash };
 
 export type RawPayloadFormat = "html" | "json" | "xml" | "text";
 
+export function toAbsoluteUrl(url: string, base: string) {
+  if (url.startsWith("http")) return url;
+  return new URL(url, base).toString();
+}
+
 export function stripMarkup(input: string) {
   return input
     .replace(/<script[\s\S]*?<\/script>/gi, " ")

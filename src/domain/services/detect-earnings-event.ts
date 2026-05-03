@@ -65,6 +65,9 @@ export function detectEarningsEvent(document: RawDocument): Omit<EarningsEvent, 
     fiscalQuarter,
     fiscalYear: detectFiscalYear(text, document.publishedAt),
     source,
-    sourceUrl: document.url
+    sourceUrl: document.pdfUrl ?? document.url,
+    operatingProfit: null,
+    operatingMargin: null,
+    netProfit: null
   };
 }

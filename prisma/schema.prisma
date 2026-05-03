@@ -64,11 +64,21 @@ enum EarningsSource {
   BSE
 }
 
+enum InsightCardType {
+  EARNINGS
+  ORDER
+  ANNOUNCEMENT
+  DEAL
+  CORPORATE_ACTION
+  NEWS
+}
+
 model User {
   id              String      @id @default(cuid())
   email           String      @unique
   telegramChatId  String?
   telegramEnabled Boolean     @default(false)
+  globalAlerts    Boolean     @default(true)
   createdAt       DateTime    @default(now())
   watchlists      Watchlist[]
 
@@ -106,6 +116,7 @@ model RawDocument {
   id                  String               @id
   source              String
   url                 String
+  pdfUrl              String?
   title               String
   content             String               @db.Text
   rawData             Json
@@ -187,6 +198,7 @@ model EngineSignal {
   createdAt       DateTime             @default(now())
   explanation     SignalExplanation?
   clusterHash     String?
+  insightCards    InsightCard[]
 
   @@index([ticker])
   @@index([score])
@@ -415,4 +427,45 @@ model DealEvent {
   @@index([dealDate])
   @@index([dealType])
   @@map("deal_events")
+}
+
+model InsightCard {
+  id          String          @id @default(cuid())
+  signalId    String?
+  ticker      String
+  companyName String
+  cardType    InsightCardType
+  headline    String
+  summary     String          @db.Text
+  sentiment   SignalSentiment
+  confidence  Float
+  rating      Int
+  impactScore Float
+  source      String
+  sourceUrl   String?
+  pdfUrl      String?
+  publishedAt DateTime
+  createdAt   DateTime        @default(now())
+
+  signal      EngineSignal?   @relation(fields: [signalId], references: [id], onDelete: SetNull)
+
+  @@index([ticker])
+  @@index([cardType])
+  @@index([publishedAt])
+  @@index([impactScore])
+  @@map("insight_cards")
+}
+
+model AlertLog {
+  id      String   @id @default(cuid())
+  cardId  String
+  userId  String
+  channel String   @default("telegram")
+  sentAt  DateTime @default(now())
+
+  @@unique([cardId, userId, channel])
+  @@index([userId])
+  @@index([cardId])
+  @@index([sentAt])
+  @@map("alert_logs")
 }

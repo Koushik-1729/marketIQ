@@ -10,6 +10,8 @@ export type EventCluster = {
   eventIds: string[];
   sourceNames: string[];
   sourceKinds: string[];
+  sourceUrls: string[];
+  pdfUrls: string[];
   summary: string;
   firstSeenAt: string;
   lastSeenAt: string;

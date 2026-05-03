@@ -14,6 +14,7 @@ type BuildRawDocumentInput = {
   sourceKind: SourceKind;
   title: string;
   url: string;
+  pdfUrl?: string;
   publishedAt?: string;
   content: string;
   rawPayload: string;
@@ -78,6 +79,7 @@ export abstract class BaseHttpSourceAdapter {
       fetchedAt: new Date().toISOString(),
       title: input.title.trim(),
       url: input.url,
+      pdfUrl: input.pdfUrl,
       content: stripMarkup(input.content),
       tickersHint:
         input.tickersHint && input.tickersHint.length > 0

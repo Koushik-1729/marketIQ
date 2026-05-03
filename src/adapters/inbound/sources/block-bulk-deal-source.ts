@@ -1,6 +1,4 @@
 import type { DealEvent } from "@/domain/ports/deal-event-repository";
-import yahooFinance from "yahoo-finance2";
-import { getYahooTicker } from "@/domain/data/ticker-mapping";
 
 export async function fetchBlockBulkDeals(): Promise<DealEvent[]> {
   try {
@@ -15,9 +13,9 @@ export async function fetchBlockBulkDeals(): Promise<DealEvent[]> {
         quantity: 1500000,
         price: 2950.45,
         dealValue: 1500000 * 2950.45,
-        dealDate: new Date(),
+        dealDate: new Date().toISOString(),
         source: "NSE_MOCK_MVP",
-        createdAt: new Date()
+        createdAt: new Date().toISOString()
       },
       {
         id: "temp2",
@@ -29,9 +27,9 @@ export async function fetchBlockBulkDeals(): Promise<DealEvent[]> {
         quantity: 2500000,
         price: 1520.10,
         dealValue: 2500000 * 1520.10,
-        dealDate: new Date(),
+        dealDate: new Date().toISOString(),
         source: "NSE_MOCK_MVP",
-        createdAt: new Date()
+        createdAt: new Date().toISOString()
       }
     ];
     return deals;

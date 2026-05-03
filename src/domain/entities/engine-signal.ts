@@ -29,6 +29,8 @@ export type EngineSignal = {
   dealValidationNote?: string;
   narrativeState: string;
   sources: string[];
+  sourceUrls: string[];
+  pdfUrls: string[];
   metaLabel: "keep" | "downgrade" | "discard";
   explanation: SignalExplanation;
 };

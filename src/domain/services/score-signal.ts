@@ -240,6 +240,8 @@ export function scoreSignal(params: {
     dealValidationNote: dealValidation?.note,
     narrativeState: getNarrativeState(cluster),
     sources: cluster.sourceNames,
+    sourceUrls: cluster.sourceUrls,
+    pdfUrls: cluster.pdfUrls,
     metaLabel: finalScore >= 60 ? "keep" : finalScore >= 45 ? "downgrade" : "discard",
     explanation: {
       stock: cluster.ticker,

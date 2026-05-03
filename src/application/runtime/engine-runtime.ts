@@ -9,8 +9,12 @@ import { PostgresJobRunRepository } from "@/adapters/outbound/repositories/postg
 import { PostgresMarketContextRepository } from "@/adapters/outbound/repositories/postgres-market-context-repository";
 import { PostgresPriceValidationRepository } from "@/adapters/outbound/repositories/postgres-price-validation-repository";
 import { PostgresRawDocumentRepository } from "@/adapters/outbound/repositories/postgres-raw-document-repository";
+import { PostgresInsightCardRepository } from "@/adapters/outbound/repositories/postgres-insight-card-repository";
 import { PostgresSignalRepository } from "@/adapters/outbound/repositories/postgres-signal-repository";
 import { PostgresWatchlistRepository } from "@/adapters/outbound/repositories/postgres-watchlist-repository";
+import { PostgresAlertLogRepository } from "@/adapters/outbound/repositories/postgres-alert-log-repository";
+import { PostgresUserAlertPreferencesRepository } from "@/adapters/outbound/repositories/postgres-user-alert-preferences-repository";
+import { TelegramAdapter } from "@/adapters/outbound/telegram-adapter";
 
 export const engineRuntime = {
   sourceRegistry: createSourceRegistry(),
@@ -25,5 +29,9 @@ export const engineRuntime = {
   priceBarRepository: new PostgresPriceBarRepository(),
   sectorBarRepository: new PostgresSectorBarRepository(),
   institutionalFlowRepository: new PostgresInstitutionalFlowRepository(),
-  dealEventRepository: new PostgresDealEventRepository()
+  dealEventRepository: new PostgresDealEventRepository(),
+  insightCardRepository: new PostgresInsightCardRepository(),
+  alertLogRepository: new PostgresAlertLogRepository(),
+  userAlertPreferencesRepository: new PostgresUserAlertPreferencesRepository(),
+  telegramAdapter: new TelegramAdapter()
 };

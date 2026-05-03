@@ -23,6 +23,7 @@ export type RawDocument = {
   fetchedAt: string;
   title: string;
   url: string;
+  pdfUrl?: string;
   content: string;
   tickersHint: string[];
   rawPayload: string;

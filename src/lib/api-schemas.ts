@@ -22,3 +22,25 @@ export const feedbackSchema = z.object({
   feedbackType: z.enum(["LIKE", "DISLIKE"]).optional(),
   userId: z.string().optional()
 });
+
+export const insightCardQuerySchema = z.object({
+  ticker: z.string().trim().min(1).optional(),
+  type: z.enum(["EARNINGS", "ORDER", "ANNOUNCEMENT", "DEAL", "CORPORATE_ACTION", "NEWS"]).optional(),
+  sentiment: z.enum(["positive", "negative", "neutral", "mixed"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20)
+});
+
+export const earningsCalendarQuerySchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(25)
+});
+
+export const earningsHistoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(24).default(8)
+});
+
+export const insiderRadarQuerySchema = z.object({
+  ticker: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(25)
+});

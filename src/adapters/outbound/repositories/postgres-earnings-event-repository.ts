@@ -24,6 +24,9 @@ function mapRecord(record: {
   guidanceTone: PrismaGuidanceTone;
   source: PrismaEarningsSource;
   sourceUrl: string;
+  operatingProfit: number | null;
+  operatingMargin: number | null;
+  netProfit: number | null;
   createdAt: Date;
 }): EarningsEvent {
   return {
@@ -43,6 +46,9 @@ function mapRecord(record: {
     guidanceTone: record.guidanceTone,
     source: record.source,
     sourceUrl: record.sourceUrl,
+    operatingProfit: record.operatingProfit,
+    operatingMargin: record.operatingMargin,
+    netProfit: record.netProfit,
     createdAt: record.createdAt.toISOString()
   };
 }
@@ -122,6 +128,35 @@ export class PostgresEarningsEventRepository implements EarningsEventRepositoryP
 
   async findRecent(limit = 10) {
     const records = await prisma.earningsEvent.findMany({
+      orderBy: [{ earningsDate: "desc" }, { createdAt: "desc" }],
+      take: limit
+    });
+
+    return records.map(mapRecord);
+  }
+
+  async findUpcoming(params?: { from?: string; to?: string; limit?: number }) {
+    const from = params?.from ? new Date(params.from) : new Date();
+    const to = params?.to ? new Date(params.to) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const limit = params?.limit ?? 50;
+
+    const records = await prisma.earningsEvent.findMany({
+      where: {
+        earningsDate: {
+          gte: from,
+          lte: to
+        }
+      },
+      orderBy: [{ earningsDate: "asc" }, { createdAt: "desc" }],
+      take: limit
+    });
+
+    return records.map(mapRecord);
+  }
+
+  async findHistoryByTicker(ticker: string, limit = 12) {
+    const records = await prisma.earningsEvent.findMany({
+      where: { ticker: ticker.toUpperCase() },
       orderBy: [{ earningsDate: "desc" }, { createdAt: "desc" }],
       take: limit
     });

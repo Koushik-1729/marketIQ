@@ -1,12 +1,12 @@
-export type StockUniverseEntry = {
+export type StockEntry = {
   ticker: string;
   companyName: string;
   aliases: string[];
   sector: string;
 };
 
-// Starter high-liquidity NSE universe that can be expanded to the full top 500 list.
-export const stockUniverse: StockUniverseEntry[] = [
+export const STOCK_UNIVERSE: StockEntry[] = [
+  { ticker: "HEG", companyName: "HEG", aliases: ["HEG", "HEG LTD"], sector: "Materials" },
   { ticker: "RELIANCE", companyName: "Reliance Industries", aliases: ["RIL", "Reliance"], sector: "Energy" },
   { ticker: "TCS", companyName: "Tata Consultancy Services", aliases: ["TCS", "Tata Consultancy"], sector: "IT" },
   { ticker: "INFY", companyName: "Infosys", aliases: ["Infosys"], sector: "IT" },
@@ -122,5 +122,5 @@ export const stockUniverse: StockUniverseEntry[] = [
 ];
 
 export const stockUniverseByTicker = new Map(
-  stockUniverse.map((entry) => [entry.ticker, entry])
+  STOCK_UNIVERSE.map((entry) => [entry.ticker, entry])
 );

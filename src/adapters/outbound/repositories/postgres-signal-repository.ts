@@ -49,6 +49,8 @@ function mapRecordToSignal(record: {
     priceValidation: "Persisted signal",
     narrativeState: "persisted",
     sources: [],
+    sourceUrls: [],
+    pdfUrls: [],
     metaLabel: "keep" as const,
     explanation: {
       stock: record.ticker,

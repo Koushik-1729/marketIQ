@@ -1,92 +1,123 @@
-export function AdminPage() {
+import { getLatestReport } from "@/application/use-cases/get-latest-report";
+import { getPrimaryWatchlist } from "@/application/use-cases/get-primary-watchlist";
+import { getFeatureHealth } from "@/application/use-cases/get-feature-health";
+
+export async function AdminPage() {
+  const [report, watchlist, health] = await Promise.all([
+    getLatestReport(),
+    getPrimaryWatchlist(),
+    getFeatureHealth()
+  ]);
+
   return (
     <div className="page-stack">
-      <section className="hero-panel">
-        <div className="eyebrow">Admin</div>
-        <h1 className="page-title">Quality, control, and delivery operations.</h1>
-        <p className="subtext">
-          The operator console for source health, event review, prompt controls,
-          and dispatch integrity.
-        </p>
-        <div className="toolbar">
-          <span className="pill">Source health</span>
-          <span className="metric-chip">Review queue</span>
-          <span className="metric-chip">Dispatch logs</span>
+      <section className="section-band">
+        <div className="section-copy">
+          <div className="eyebrow">Admin</div>
+          <h1 className="headline">
+            Quality, control, and delivery <span className="text-highlight">operations</span>.
+          </h1>
+          <p className="subtext">
+            The control layer for monitoring ingestion, reviewing edge cases, and keeping
+            dispatch quality tight before the opening bell.
+          </p>
+          <div className="toolbar">
+            <span className="pill">Source health</span>
+            <span className="metric-chip">Review queue</span>
+            <span className="metric-chip">Dispatch logs</span>
+          </div>
         </div>
       </section>
 
       <section className="admin-grid">
         <article className="stat-card">
-          <div className="eyebrow">Sources</div>
-          <div className="stat-value">8</div>
-          <div className="footnote">connected adapters</div>
+          <div className="eyebrow">Signals</div>
+          <div className="stat-value">{report.topHighConfidenceSignals.length}</div>
+          <div className="footnote">ranked feed items</div>
         </article>
         <article className="stat-card">
-          <div className="eyebrow">Jobs</div>
-          <div className="stat-value">3</div>
-          <div className="footnote">active workflows</div>
+          <div className="eyebrow">Watchlist</div>
+          <div className="stat-value">{watchlist.tickers.length}</div>
+          <div className="footnote">tracked tickers</div>
         </article>
         <article className="stat-card">
           <div className="eyebrow">Queue</div>
-          <div className="stat-value">12</div>
-          <div className="footnote">review items</div>
+          <div className="stat-value">{report.riskAlerts.length}</div>
+          <div className="footnote">risk review items</div>
         </article>
         <article className="stat-card">
-          <div className="eyebrow">Prompts</div>
-          <div className="stat-value">4</div>
-          <div className="footnote">tracked versions</div>
+          <div className="eyebrow">Deals</div>
+          <div className="stat-value">{report.recentDeals.length}</div>
+          <div className="footnote">recent smart-money events</div>
         </article>
       </section>
 
       <section className="split-grid">
-        <div className="panel">
+        <div className="glass-card panel">
           <div className="panel-title">
             <div>
               <div className="eyebrow">Ops modules</div>
-              <h3>Control surface</h3>
+              <h3>Live review surface</h3>
             </div>
           </div>
           <div className="admin-stack">
-            <div className="admin-item">
-              <strong>Source board</strong>
-              <div className="footnote">timeouts, blocks, parse quality</div>
-            </div>
-            <div className="admin-item">
-              <strong>Event review</strong>
-              <div className="footnote">merge, split, approve, discard</div>
-            </div>
-            <div className="admin-item">
-              <strong>Threshold controls</strong>
-              <div className="footnote">weight and trust tuning</div>
-            </div>
-            <div className="admin-item">
-              <strong>Dispatch logs</strong>
-              <div className="footnote">delivery retries and failures</div>
-            </div>
+            {report.topHighConfidenceSignals.slice(0, 4).map((signal) => (
+              <div key={signal.id} className="admin-item">
+                <strong>{signal.ticker}</strong>
+                <div className="footnote">
+                  {signal.priorityLevel} · {signal.confirmationCount} confirmations · {signal.sentiment}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="panel">
+        <div className="glass-card panel">
           <div className="panel-title">
             <div>
               <div className="eyebrow">Daily loop</div>
-              <h3>Analyst workflow</h3>
+              <h3>Risk review queue</h3>
             </div>
           </div>
           <div className="timeline">
-            <div className="timeline-item">
-              <strong>Review high-impact ambiguity</strong>
-              <div className="footnote">manual attention first goes to uncertain top signals</div>
-            </div>
-            <div className="timeline-item">
-              <strong>Audit source failures</strong>
-              <div className="footnote">identify parser vs upstream issues</div>
-            </div>
-            <div className="timeline-item">
-              <strong>Check feedback outcomes</strong>
-              <div className="footnote">validate whether usefulness is improving</div>
-            </div>
+            {report.riskAlerts.slice(0, 3).map((signal) => (
+              <div key={signal.id} className="timeline-item">
+                <strong>{signal.ticker}</strong>
+                <div className="footnote">{signal.conflictReason ?? signal.eventSummary}</div>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      <section className="glass-card panel">
+        <div className="panel-title">
+          <div>
+            <div className="eyebrow">Backend visibility</div>
+            <h3>Feature health</h3>
+          </div>
+        </div>
+        <div className="admin-grid">
+          <article className="stat-card">
+            <div className="eyebrow">Report</div>
+            <div className="stat-value">{health.services.latestReport.topSignals}</div>
+            <div className="footnote">{health.services.latestReport.status}</div>
+          </article>
+          <article className="stat-card">
+            <div className="eyebrow">Calendar</div>
+            <div className="stat-value">{health.services.earningsCalendar.upcomingCount}</div>
+            <div className="footnote">{health.services.earningsCalendar.status}</div>
+          </article>
+          <article className="stat-card">
+            <div className="eyebrow">Radar</div>
+            <div className="stat-value">{health.services.insiderRadar.itemCount}</div>
+            <div className="footnote">{health.services.insiderRadar.status}</div>
+          </article>
+          <article className="stat-card">
+            <div className="eyebrow">Signals</div>
+            <div className="stat-value">{health.services.signalStore.itemCount}</div>
+            <div className="footnote">{health.services.signalStore.status}</div>
+          </article>
         </div>
       </section>
     </div>

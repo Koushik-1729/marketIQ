@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import { cache } from "react";
 import type { LatestReport } from "@/application/dto/latest-report";
 import { engineRuntime } from "@/application/runtime/engine-runtime";
 import { getDashboardData } from "@/application/use-cases/get-dashboard-data";
@@ -6,17 +7,56 @@ import { getPrimaryWatchlist } from "@/application/use-cases/get-primary-watchli
 import { validateInstitutionalFlow } from "@/domain/services/validate-institutional-flow";
 import { rankReportSignals } from "@/domain/services/rank-report-signals";
 import { buildPremarketReport } from "@/domain/services/build-premarket-report";
+import type { EarningsEvent } from "@/domain/entities/earnings-event";
+import type { SectorBar } from "@/domain/ports/sector-bar-repository";
+import type { DealEvent } from "@/domain/ports/deal-event-repository";
+import type { InstitutionalFlow } from "@/domain/ports/institutional-flow-repository";
+import { withTimeout } from "@/lib/async-utils";
 
-export async function getLatestReport(): Promise<LatestReport> {
+export const getLatestReport = cache(async function getLatestReport(): Promise<LatestReport> {
   noStore();
-  const [dashboard, recentEarningsEvents, latestSectorBars, latestFlows, latestDeals, watchlist] = await Promise.all([
-    getDashboardData(),
-    engineRuntime.earningsEventRepository.findRecent(5),
-    engineRuntime.sectorBarRepository.getLatestForAllSectors(),
-    engineRuntime.institutionalFlowRepository.findLatest("EQUITY"),
-    engineRuntime.dealEventRepository.findLatest(10),
-    getPrimaryWatchlist()
-  ]);
+  const [dashboardResult, earningsResult, sectorsResult, flowsResult, dealsResult, watchlistResult] =
+    await Promise.all([
+      withTimeout(() => getDashboardData(), {
+        marketMood: "Live market data unavailable",
+        giftNifty: "Unavailable",
+        fiiDii: "Unavailable",
+        topSignals: [],
+        watchlistSignals: [],
+        riskSignals: []
+      }),
+      withTimeout<EarningsEvent[]>(
+        () => engineRuntime.earningsEventRepository.findRecent(5),
+        []
+      ),
+      withTimeout<SectorBar[]>(
+        () => engineRuntime.sectorBarRepository.getLatestForAllSectors(),
+        []
+      ),
+      withTimeout<InstitutionalFlow[]>(
+        () => engineRuntime.institutionalFlowRepository.findLatest("EQUITY"),
+        []
+      ),
+      withTimeout<DealEvent[]>(() => engineRuntime.dealEventRepository.findLatest(10), []),
+      withTimeout(() => getPrimaryWatchlist(), {
+        userId: "offline-user",
+        tickers: [],
+        sectors: [],
+        themes: [],
+        riskTolerance: "medium" as const
+      })
+    ]);
+
+  const dashboard = dashboardResult.data;
+  const recentEarningsEvents = earningsResult.data;
+  const latestSectorBars = sectorsResult.data;
+  const latestFlows = flowsResult.data;
+  const latestDeals = dealsResult.data;
+  const watchlist = watchlistResult.data;
+  const dataStatus =
+    dashboardResult.ok && (earningsResult.ok || sectorsResult.ok || flowsResult.ok || dealsResult.ok)
+      ? "live"
+      : "degraded";
   
   const flowValidation = validateInstitutionalFlow(latestFlows);
 
@@ -102,6 +142,7 @@ export async function getLatestReport(): Promise<LatestReport> {
 
   return {
     generatedAt: new Date().toISOString(),
+    dataStatus,
     giftNifty: dashboard.giftNifty,
     fiiDii: dashboard.fiiDii,
     topSignals: dashboard.topSignals,
@@ -121,4 +162,4 @@ export async function getLatestReport(): Promise<LatestReport> {
     })),
     ...premarketSections
   };
-}
+});

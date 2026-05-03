@@ -1,9 +1,12 @@
 import { BaseHttpSourceAdapter } from "@/adapters/inbound/sources/base-http-source";
 import type { RawDocument } from "@/domain/entities/raw-document";
 import type { RawDocumentSourcePort } from "@/domain/ports/raw-document-source";
-import { stripMarkup } from "@/lib/source-utils";
+import { stripMarkup, toAbsoluteUrl } from "@/lib/source-utils";
 
 function parseBseAnnouncementBlocks(html: string) {
+  // First, extract all PDF links from the raw HTML to map them later
+  const pdfLinks = html.match(/href="([^"]+\.pdf[^"]*)"/gi) || [];
+  
   const lines = stripMarkup(html)
     .split(/(?=[A-Z0-9&.-]{2,15}\s)/)
     .map((line) => line.trim())
@@ -16,12 +19,18 @@ function parseBseAnnouncementBlocks(html: string) {
       const ticker = tokens[0];
       const category = detectBseCategory(line);
 
+      // Naive mapping: assign the first found PDF link to the first block, second to second, etc.
+      // A more robust parser would chunk by DOM nodes, but this works for the current regex strategy.
+      const pdfMatch = pdfLinks.shift();
+      const pdfUrl = pdfMatch ? toAbsoluteUrl(pdfMatch.replace(/href="|"/g, ""), "https://www.bseindia.com") : undefined;
+
       return {
         ticker,
         text: line,
         category,
         announcementType: category,
-        eventTimestamp: extractDate(line)
+        eventTimestamp: extractDate(line),
+        pdfUrl
       };
     })
     .slice(0, 12);
@@ -76,16 +85,17 @@ export class BseAnnouncementsSourceAdapter
       ];
     }
 
-    return blocks.map((block, index) =>
-      this.buildRawDocument({
+    return blocks.map((block, index) => {
+      const doc = this.buildRawDocument({
         sourceName: "BSE Announcement",
         sourceKind: "filing",
         title: `${block.ticker} ${block.category}`,
-        url: `${this.announcementsUrl}#item-${index + 1}`,
+        url: block.pdfUrl ?? `${this.announcementsUrl}#item-${index + 1}`,
         content: block.text,
         rawPayload: html,
         rawPayloadFormat: "html",
         tickersHint: [block.ticker],
+        pdfUrl: block.pdfUrl,
         metadata: {
           ticker: block.ticker,
           announcementType: block.announcementType,
@@ -94,7 +104,13 @@ export class BseAnnouncementsSourceAdapter
           companyName: block.ticker,
           earningsCandidate: isEarningsAnnouncement(block.text)
         }
-      })
-    );
+      });
+      if (block.pdfUrl) {
+        console.log(`[ingestion] pdfUrl extracted: ${block.pdfUrl}`);
+      } else {
+        console.log(`[ingestion] no pdfUrl for doc: ${doc.url}`);
+      }
+      return doc;
+    });
   }
 }

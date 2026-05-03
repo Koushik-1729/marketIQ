@@ -1,4 +1,4 @@
-import { stockUniverse, stockUniverseByTicker } from "@/domain/data/stock-universe";
+import { STOCK_UNIVERSE, stockUniverseByTicker } from "@/domain/data/stock-universe";
 import type { RawDocument } from "@/domain/entities/raw-document";
 
 const financialKeywords = [
@@ -134,7 +134,7 @@ export function filterStockRelevantDocuments(
   for (const document of documents) {
     const text = `${document.title} ${document.content}`.toLowerCase();
     const stocktwitsMomentumOnly = allowStocktwitsMomentumOnly(document);
-    const matchedUniverse = stockUniverse.find((entry) => {
+    const matchedUniverse = STOCK_UNIVERSE.find((entry) => {
       if (document.tickersHint.includes(entry.ticker)) {
         return true;
       }

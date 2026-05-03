@@ -18,6 +18,7 @@ import type { SectorValidation } from "@/domain/services/validate-sector-momentu
 import { validateInstitutionalFlow } from "@/domain/services/validate-institutional-flow";
 import { validateDealEvent } from "@/domain/services/validate-deal-event";
 import { sendEarningsPulse } from "@/application/use-cases/send-earnings-pulse";
+import { buildInsightCards } from "@/application/use-cases/build-insight-cards";
 
 function buildEarningsEvents(rawDocuments: Awaited<ReturnType<typeof engineRuntime.rawDocumentRepository.findRecent>>) {
   return rawDocuments.flatMap<EarningsEvent>((document) => {
@@ -68,7 +69,7 @@ export async function runSignalEngine(performIngestion = true): Promise<EngineDa
   const flowValidation = validateInstitutionalFlow(latestFlows);
 
   // Get recent deals for all event cluster tickers - PROCESS SEQUENTIALLY to respect connection pool limit
-  const recentDealsResults = [];
+  const recentDealsResults: Awaited<ReturnType<typeof engineRuntime.dealEventRepository.findRecentByTicker>>[] = [];
   for (const cluster of eventClusters) {
     const deals = await engineRuntime.dealEventRepository.findRecentByTicker(cluster.ticker, 7);
     recentDealsResults.push(deals);
@@ -130,6 +131,7 @@ export async function runSignalEngine(performIngestion = true): Promise<EngineDa
 
   const finalSignals = filterSignals(scoredSignals);
   await engineRuntime.signalRepository.saveMany(finalSignals);
+  await buildInsightCards(finalSignals);
   const watchlist = await engineRuntime.watchlistRepository.getPrimaryWatchlist();
   const rankedWatchlistSignals = rankSignalsForWatchlist(finalSignals, {
     tickers: watchlist.tickers,

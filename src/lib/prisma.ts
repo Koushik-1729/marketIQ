@@ -5,9 +5,7 @@ const globalForPrisma = globalThis as typeof globalThis & {
 };
 
 function createPrismaClient() {
-  return new PrismaClient({
-    log: ["error", "warn"]
-  });
+  return new PrismaClient();
 }
 
 function hasEarningsEventModel(client: PrismaClient) {

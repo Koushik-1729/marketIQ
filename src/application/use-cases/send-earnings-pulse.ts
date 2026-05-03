@@ -25,7 +25,7 @@ export async function sendEarningsPulse(ticker: string) {
     where: { telegramChatId: { not: null } }
   });
 
-  const client = new TelegramClient(process.env.TELEGRAM_BOT_TOKEN || "");
+  const client = new TelegramClient();
   let sentCount = 0;
 
   for (const user of users) {

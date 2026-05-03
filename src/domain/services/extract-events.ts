@@ -1,80 +1,110 @@
 import type { ExtractedEvent } from "@/domain/entities/extracted-event";
 import type { NormalizedDocument } from "@/domain/entities/normalized-document";
 import type { RawDocument } from "@/domain/entities/raw-document";
+import { resolveTickers, resolveTickersFromText } from "@/domain/services/ticker-resolver";
+import { detectEvent } from "@/domain/services/event-detector";
 
-const companyRegistry: Record<
-  string,
-  { company: string; sector: string }
-> = {
-  RELIANCE: { company: "Reliance Industries", sector: "Energy" },
-  INFY: { company: "Infosys", sector: "IT" },
-  HDFCBANK: { company: "HDFC Bank", sector: "Financials" },
-  TATAMOTORS: { company: "Tata Motors", sector: "Auto" }
-};
+export function extractEvents(
+  rawDocuments: RawDocument[],
+  normalizedDocuments: NormalizedDocument[]
+): ExtractedEvent[] {
+  return normalizedDocuments
+    .filter((document) => !document.isDuplicate)
+    .flatMap<ExtractedEvent>((document) => {
+      const raw = rawDocuments.find((item) => item.id === document.rawDocumentId);
+      if (!raw) return [];
 
-function detectEventType(text: string): ExtractedEvent["eventType"] {
-  if (/order|contract|partnership/.test(text)) return "order_win";
-  if (/promoter|insider|stake/.test(text)) return "insider_activity";
-  if (/ceo|cfo|management/.test(text)) return "management_change";
-  if (/volume|delivery|breakout|breakdown/.test(text)) return "unusual_volume";
-  if (/social|buzz|mentions/.test(text)) return "sentiment_spike";
-  if (/earnings|results|revenue|profit/.test(text)) return "earnings";
-  return "other";
+      const fullText = `${raw.title} ${raw.content}`;
+      
+      // 1. Resolve tickers from full text (handles multi-word aliases)
+      const resolvedFromText = resolveTickersFromText(fullText);
+      
+      // 2. Also check single-token candidates as backup or for specific ticker hints
+      const tokens = fullText.match(/\b[A-Z][A-Z0-9&.-]{1,14}\b/g) ?? [];
+      const resolvedFromTokens = resolveTickers(tokens);
+
+      // Merge results
+      const seen = new Set(resolvedFromText.map(r => r.ticker));
+      const resolvedTickers = [...resolvedFromText];
+      
+      for (const r of resolvedFromTokens) {
+        if (!seen.has(r.ticker)) {
+          resolvedTickers.push(r);
+          seen.add(r.ticker);
+        }
+      }
+
+      if (resolvedTickers.length === 0) {
+        console.log(`[pipeline] skipped document: no valid company resolved for "${raw.title}"`);
+        return [];
+      }
+
+      const events: ExtractedEvent[] = [];
+
+      for (const resolved of resolvedTickers) {
+        // 3. Detect eventType
+        const eventType = detectEvent(fullText);
+        
+        if (!eventType) {
+          console.log(`[pipeline] skipped: no financial event detected for ${resolved.ticker}`);
+          continue;
+        }
+
+        // 4. Evidence Gate
+        const hasNumbers = /[₹$]|\d+\.?\d*\s*(cr|crore|%|bps|lakh|bn|mn)/gi.test(fullText);
+        const isOfficial = raw.sourceKind === "filing";
+        const strongMatch = fullText.toLowerCase().includes(resolved.companyName.toLowerCase());
+
+        if (!isOfficial && !hasNumbers && !strongMatch) {
+          console.log(`[pipeline] skipped: insufficient evidence for ${resolved.ticker}`);
+          continue;
+        }
+
+        // 5. Confidence Scoring
+        let confidence = 0.5;
+        if (isOfficial) confidence += 0.2;
+        if (hasNumbers) confidence += 0.15;
+        if (strongMatch) confidence += 0.15;
+        confidence = Math.min(confidence, 1.0);
+
+        if (confidence < 0.6) {
+          console.log(`[pipeline] skipped ${resolved.ticker}: confidence too low (${confidence})`);
+          continue;
+        }
+
+        console.log(`[event] detected ${eventType} for ${resolved.ticker} (confidence: ${confidence})`);
+
+        events.push({
+          id: `evt_${raw.id}_${resolved.ticker}`,
+          documentId: raw.id,
+          ticker: resolved.ticker,
+          company: resolved.companyName,
+          sector: "Other", 
+          eventType: eventType.toLowerCase() as any,
+          sentiment: detectSentiment(fullText),
+          confidence,
+          eventAt: raw.publishedAt,
+          keywords: [eventType, ...resolved.ticker.split("-")],
+          evidence: [raw.title, fullText.slice(0, 200)],
+          sourceName: raw.sourceName,
+          sourceKind: raw.sourceKind,
+          sourceUrl: raw.pdfUrl ?? raw.url,
+          pdfUrl: raw.pdfUrl
+        });
+      }
+
+      return events;
+    });
 }
 
 function detectSentiment(text: string): ExtractedEvent["sentiment"] {
-  const positive = /growth|strong|upbeat|win|expansion|buying|breakout/.test(text);
-  const negative = /selling|cut|probe|risk|weak|breakdown|concern/.test(text);
+  const positive =
+    /growth|strong|upbeat|win|expansion|buying|breakout|beats?|exceed|upgrade|record|robust|positive|surge/i.test(text);
+  const negative =
+    /selling|cut|probe|risk|weak|breakdown|concern|miss|disappoint|downgrade|penalty|loss|decline|fall/i.test(text);
 
   if (positive && negative) return "mixed";
   if (positive) return "positive";
   if (negative) return "negative";
   return "neutral";
-}
-
-export function extractEvents(
-  rawDocuments: RawDocument[],
-  normalizedDocuments: NormalizedDocument[]
-) {
-  return normalizedDocuments
-    .filter((document) => !document.isDuplicate)
-    .flatMap<ExtractedEvent>((document) => {
-      const raw = rawDocuments.find((item) => item.id === document.rawDocumentId);
-
-      if (!raw) {
-        return [];
-      }
-
-      return raw.tickersHint.map((ticker) => {
-        const company = companyRegistry[ticker] ?? {
-          company: ticker,
-          sector: "Unknown"
-        };
-        const sourceConfidence =
-          raw.sourceKind === "filing"
-            ? 0.95
-            : raw.sourceKind === "news"
-              ? 0.82
-              : raw.sourceKind === "market_data"
-                ? 0.78
-                : 0.64;
-        const sentiment = detectSentiment(document.canonicalContent);
-
-        return {
-          id: `evt_${raw.id}_${ticker}`,
-          documentId: raw.id,
-          ticker,
-          company: company.company,
-          sector: company.sector,
-          eventType: detectEventType(document.canonicalContent),
-          sentiment,
-          confidence: sourceConfidence,
-          eventAt: raw.publishedAt,
-          keywords: raw.title.toLowerCase().split(/\W+/).filter(Boolean).slice(0, 6),
-          evidence: [raw.title, raw.content.slice(0, 160)],
-          sourceName: raw.sourceName,
-          sourceKind: raw.sourceKind
-        };
-      });
-    });
 }
