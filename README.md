@@ -58,7 +58,7 @@ cp .env.local.example .env.local
 Important:
 
 - Keep the pooler URL on port `6543` for `DATABASE_URL`
-- Use the direct database host `db.mpkrhyzhklpcuygucwvg.supabase.co:5432` for `DIRECT_URL`
+- Use the direct database host `db.*********.supabase.co:5432` for `DIRECT_URL`
 - Do not use the pooler host for `DIRECT_URL`, because Prisma migrations should use the direct connection
 
 Schedulers are defined in:
