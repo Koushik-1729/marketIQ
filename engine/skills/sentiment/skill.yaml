@@ -1,0 +1,20 @@
+skill_id: sentiment
+kind: functional
+description: "Fetch and analyze news sentiment from NSE/BSE filings, RSS news feeds (Economic Times, Moneycontrol, CNBC TV18, Business Standard, Reuters), and StockTwits social data for Indian equity markets. Use for news event analysis, announcement classification, and sentiment scoring."
+examples:
+  - latest news sentiment for TCS
+  - NSE announcements for INFY today
+  - social sentiment for TATAMOTORS
+tools:
+  - fetch_nse_filings
+  - fetch_bse_announcements
+  - fetch_rss_news
+  - fetch_stocktwits
+  - normalize_documents
+  - extract_events
+  - classify_events
+  - filter_stock_relevant_documents
+required_inputs:
+  - [query]
+max_loops: 8
+model_tier: capable

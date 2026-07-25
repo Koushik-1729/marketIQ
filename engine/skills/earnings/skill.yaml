@@ -1,0 +1,16 @@
+skill_id: earnings
+kind: functional
+description: "Parse and score quarterly earnings results from NSE/BSE filings. Extracts EPS, revenue, operating profit, margins, guidance tone. Identifies beats/misses and computes earnings impact score for signal generation."
+examples:
+  - Q3 results analysis for HDFCBANK
+  - parse earnings announcement for WIPRO
+  - earnings beat or miss for RELIANCE Q4
+tools:
+  - detect_earnings_event
+  - parse_earnings_metrics
+  - score_earnings_signal
+  - fetch_earnings_history
+required_inputs:
+  - [query]
+max_loops: 6
+model_tier: capable

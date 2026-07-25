@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: marketiq-engine
+Version: 0.1.0
+Summary: Skill-driven LangGraph agent engine for Indian equity market intelligence
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: uvicorn[standard]>=0.30.0
+Requires-Dist: langgraph>=0.2.0
+Requires-Dist: langchain-core>=0.3.0
+Requires-Dist: langchain-community>=0.3.0
+Requires-Dist: langchain-ollama>=0.2.0
+Requires-Dist: langchain-openai>=0.2.0
+Requires-Dist: sqlalchemy[asyncio]>=2.0.0
+Requires-Dist: asyncpg>=0.29.0
+Requires-Dist: redis>=5.0.0
+Requires-Dist: apscheduler>=3.10.0
+Requires-Dist: pydantic-settings>=2.5.0
+Requires-Dist: structlog>=24.4.0
+Requires-Dist: feedparser>=6.0.0
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: beautifulsoup4>=4.12.0
+Requires-Dist: yfinance>=0.2.40
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: aiohttp>=3.10.0
+
+# MarketIQ Engine
+Python LangGraph Agent Engine for MarketIQ.

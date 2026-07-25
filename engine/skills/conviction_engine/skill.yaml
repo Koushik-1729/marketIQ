@@ -1,0 +1,19 @@
+skill_id: conviction_engine
+kind: functional
+description: "Aggregate all analysis (quantitative, sentiment, earnings, counter-bias, historical) into a final conviction score (0-100) with risk level classification, narrative explanation, and insight card generation. Always the LAST skill to load in a signal generation run."
+examples:
+  - compute final signal score for RELIANCE
+  - generate conviction score and insight card
+  - finalize signal analysis with all validations
+tools:
+  - score_signal
+  - explain_signal
+  - cluster_events
+  - filter_signals
+  - build_insight_card
+  - write_signal_to_db
+  - write_insight_card_to_db
+required_inputs:
+  - [query]
+max_loops: 5
+model_tier: max

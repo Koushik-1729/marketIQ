@@ -1,0 +1,16 @@
+skill_id: report_generator
+kind: functional
+description: "Generate pre-market morning reports and intraday summaries from top-scored signals and insight cards. Formats for both dashboard display and Telegram notification delivery."
+examples:
+  - generate morning report
+  - create pre-market summary
+  - format today's top signals for Telegram
+tools:
+  - read_top_signals
+  - read_insight_cards
+  - format_report
+  - send_telegram_report
+required_inputs:
+  - [query]
+max_loops: 4
+model_tier: lite

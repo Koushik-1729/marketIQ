@@ -1,0 +1,17 @@
+skill_id: quantitative
+kind: functional
+description: "Analyze price action, volume patterns, technical breakouts/breakdowns, sector momentum, and institutional flow data for NSE/BSE stocks. Use when question involves price movement, volume analysis, technical setup, or market context."
+examples:
+  - analyze price breakout for RELIANCE
+  - check volume spike and delivery data for HDFCBANK
+  - sector momentum for banking stocks today
+tools:
+  - fetch_price_bars
+  - validate_price_volume
+  - validate_sector_momentum
+  - fetch_market_context
+  - fetch_institutional_flows
+required_inputs:
+  - [query]
+max_loops: 6
+model_tier: capable

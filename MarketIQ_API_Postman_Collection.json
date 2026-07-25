@@ -1,0 +1,231 @@
+{
+  "info": {
+    "_postman_id": "marketiq-full-collection-v1",
+    "name": "MarketIQ Agent Engine & Next.js API Collection",
+    "description": "Complete Postman collection for testing all endpoints in MarketIQ Python Agent Engine (Port 8001) and Next.js React Dashboard (Port 3000).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "engine_url",
+      "value": "http://127.0.0.1:8001",
+      "type": "string"
+    },
+    {
+      "key": "nextjs_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🐍 Python Agent Engine (Port 8001)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{engine_url}}/api/v1/health",
+              "host": ["{{engine_url}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Check if Python Agent Engine is running and responsive."
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger Signal Engine Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{engine_url}}/api/v1/signals/run",
+              "host": ["{{engine_url}}"],
+              "path": ["api", "v1", "signals", "run"]
+            },
+            "description": "Triggers the full LangGraph ReAct agent loop (NVIDIA GLM-5.2 + 7 Skills + 35 Tools)."
+          },
+          "response": []
+        },
+        {
+          "name": "List All Engine Signals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{engine_url}}/api/v1/signals?limit=20",
+              "host": ["{{engine_url}}"],
+              "path": ["api", "v1", "signals"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Max signals to return"
+                },
+                {
+                  "key": "ticker",
+                  "value": "RELIANCE",
+                  "disabled": true,
+                  "description": "Filter signals by NSE ticker"
+                }
+              ]
+            },
+            "description": "Fetch signals stored in Supabase PostgreSQL sorted by conviction score."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Morning Report & Telegram Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{engine_url}}/api/v1/reports/generate",
+              "host": ["{{engine_url}}"],
+              "path": ["api", "v1", "reports", "generate"]
+            },
+            "description": "Triggers report_generator skill: formats pre-market briefing and broadcasts to Telegram."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Latest Morning Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{engine_url}}/api/v1/reports/latest",
+              "host": ["{{engine_url}}"],
+              "path": ["api", "v1", "reports", "latest"]
+            },
+            "description": "Fetch the latest formatted market intelligence report."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🌐 Next.js Dashboard Backend (Port 3000)",
+      "item": [
+        {
+          "name": "Run Signal Engine (UI Proxy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/signals/run",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "signals", "run"]
+            },
+            "description": "Triggers Python Engine via Next.js backend proxy."
+          },
+          "response": []
+        },
+        {
+          "name": "Get UI Signals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/signals",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "signals"]
+            },
+            "description": "Fetch engine signals formatted for Next.js React UI."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Latest UI Morning Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/reports/latest",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "reports", "latest"]
+            },
+            "description": "Fetch latest report for Next.js Reports page."
+          },
+          "response": []
+        },
+        {
+          "name": "Get FII/DII Institutional Flow Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/institutional-flows/latest",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "institutional-flows", "latest"]
+            },
+            "description": "Fetch latest institutional flow data."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sector Momentum Scores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/sectors/momentum",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "sectors", "momentum"]
+            },
+            "description": "Fetch sector relative strength data."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Latest Block/Bulk Deals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/deals/latest",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "deals", "latest"]
+            },
+            "description": "Fetch recent NSE block and bulk deal events."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Watchlists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{nextjs_url}}/api/watchlists",
+              "host": ["{{nextjs_url}}"],
+              "path": ["api", "watchlists"]
+            },
+            "description": "Fetch user watchlists."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

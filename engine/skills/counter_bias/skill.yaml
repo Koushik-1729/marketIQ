@@ -1,0 +1,16 @@
+skill_id: counter_bias
+kind: functional  
+description: "Cross-check positive news signals against contradictory evidence: price action contradictions, insider selling, institutional outflows, deal selling, or sector weakness. Applies conflict penalties to prevent false positive signals."
+examples:
+  - verify if TCS buying signal is genuine
+  - check for counter-evidence to bullish HDFC signal
+  - insider activity check for BAJFINANCE
+tools:
+  - detect_conflicts
+  - validate_institutional_flow
+  - validate_deal_event
+  - fetch_deal_events
+required_inputs:
+  - [query]
+max_loops: 4
+model_tier: capable

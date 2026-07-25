@@ -1,0 +1,15 @@
+skill_id: historical_impact
+kind: functional
+description: "Research how similar past events impacted stock prices historically. Queries historical EngineSignal records and FeedbackOutcome data to compute average price impact statistics for event types, enabling evidence-based conviction scoring."
+examples:
+  - historical impact of earnings beats for HDFCBANK
+  - past bulk deal signals outcome for RELIANCE
+  - how have M&A announcements impacted TATAMOTORS historically
+tools:
+  - query_historical_signals
+  - query_feedback_outcomes
+  - compute_impact_statistics
+required_inputs:
+  - [query]
+max_loops: 6
+model_tier: capable
