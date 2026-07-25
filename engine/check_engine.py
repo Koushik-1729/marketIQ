@@ -23,10 +23,10 @@ async def check_database():
             res = await session.execute(text("SELECT 1;"))
             row = res.fetchone()
             if row and row[0] == 1:
-                print("🟢 DATABASE: Connected successfully!")
+                print("DATABASE: Connected successfully!")
                 return True
     except Exception as exc:
-        print(f"🔴 DATABASE: Connection failed: {exc}")
+        print(f"DATABASE: Connection failed: {exc}")
     return False
 
 async def check_scraping():
@@ -36,26 +36,26 @@ async def check_scraping():
     print("Fetching NSE Announcements...")
     nse_res = await fetch_nse_filings()
     if nse_res.get("error"):
-        print(f"⚠️  NSE Filings: Fetch failed/blocked (NSE has strict browser guards): {nse_res.get('error')}")
+        print(f" NSE Filings: Fetch failed/blocked (NSE has strict browser guards): {nse_res.get('error')}")
     else:
-        print(f"🟢 NSE Filings: Fetched {nse_res.get('count')} recent corporate filings.")
+        print(f"NSE Filings: Fetched {nse_res.get('count')} recent corporate filings.")
 
     # 2. BSE Announcements
     print("Fetching BSE Announcements...")
     bse_res = await fetch_bse_announcements()
     if bse_res.get("error"):
-        print(f"🔴 BSE: Fetch failed: {bse_res.get('error')}")
+        print(f"BSE: Fetch failed: {bse_res.get('error')}")
     else:
-        print(f"🟢 BSE: Fetched {bse_res.get('count')} announcements.")
+        print(f"BSE: Fetched {bse_res.get('count')} announcements.")
 
     # 3. RSS News Feeds
     print("Fetching Economic Times RSS Feed...")
     rss_res = await fetch_rss_news(settings.ECONOMIC_TIMES_RSS)
     docs = rss_res.get("documents", [])
     if len(docs) > 0:
-        print(f"🟢 RSS Feed: Successfully parsed {len(docs)} news articles from Economic Times.")
+        print(f"RSS Feed: Successfully parsed {len(docs)} news articles from Economic Times.")
     else:
-        print("🔴 RSS Feed: Failed to fetch/parse articles.")
+        print("RSS Feed: Failed to fetch/parse articles.")
 
 async def check_llm():
     print("\nChecking LLM Router integration...")
@@ -67,10 +67,10 @@ async def check_llm():
         # Test basic invocation
         resp = await llm.ainvoke("Respond with the single word 'READY'.")
         content = resp.content.strip() if hasattr(resp, "content") else str(resp).strip()
-        print(f"🟢 LLM Router: Response received: '{content}'")
+        print(f" LLM Router: Response received: '{content}'")
         return True
     except Exception as exc:
-        print(f"🔴 LLM Router: Invocation failed: {exc}")
+        print(f"LLM Router: Invocation failed: {exc}")
     return False
 
 async def main():
@@ -85,7 +85,7 @@ async def main():
     
     print("\n====================================================")
     if db_ok and llm_ok:
-        print("🎉 DIAGNOSTIC PASSED: Core services are operational!")
+        print(" DIAGNOSTIC PASSED: Core services are operational!")
     else:
         print("⚠️  DIAGNOSTIC WARNING: Some components require check/setup.")
     print("====================================================")
