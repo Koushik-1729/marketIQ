@@ -7,7 +7,9 @@ from __future__ import annotations
 from typing import Sequence
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+import json
 import structlog
+
 
 from app.domain.entities.signal import EngineSignal, SignalExplanation
 from app.domain.ports.repositories import SignalRepository
@@ -47,15 +49,17 @@ class PostgresSignalRepository(SignalRepository):
                 await self.session.execute(
                     text("""
                     INSERT INTO "SignalExplanation" (id, "signalId", reasons, summary, "createdAt")
-                    VALUES (:id, :signalId, :reasons::jsonb, :summary, NOW())
+                    VALUES (:id, :signalId, CAST(:reasons AS jsonb), :summary, NOW())
                     ON CONFLICT ("signalId") DO UPDATE SET summary = EXCLUDED.summary;
+
                     """),
                     {
                         "id": f"exp_{sig.id}",
                         "signalId": sig.id,
-                        "reasons": str(sig.explanation.reasons),
+                        "reasons": json.dumps(sig.explanation.reasons),
                         "summary": ". ".join(sig.explanation.reasons) if sig.explanation.reasons else sig.eventSummary,
                     },
+
                 )
         await self.session.flush()
 
