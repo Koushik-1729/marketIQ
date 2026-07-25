@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { triggerSignalScan } from "../api/client";
+import { triggerSignalScan, sendChatMessage } from "../api/client";
+
 
 export type NavTab = "overview" | "signals" | "earnings" | "radar" | "insights" | "reports" | "watchlist" | "admin";
 
@@ -40,7 +41,7 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
     }
   }
 
-  function handleSendChat(e: React.FormEvent) {
+  async function handleSendChat(e: React.FormEvent) {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -48,16 +49,24 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
     setChatMessages((prev) => [...prev, { role: "user", text: userMsg }]);
     setChatInput("");
 
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: `Analysis for "${userMsg}": High conviction setup detected with RRF Hybrid rank #1. Monitor order win announcements & volume confirmation.`
-        }
-      ]);
-    }, 600);
+    // Add a placeholder message while waiting for backend response
+    setChatMessages((prev) => [...prev, { role: "assistant", text: "✍️ Thinking..." }]);
+
+    try {
+      const response = await sendChatMessage(userMsg);
+      setChatMessages((prev) => {
+        // Remove the "Thinking..." message and add the real response
+        const filtered = prev.filter((m) => m.text !== "✍️ Thinking...");
+        return [...filtered, { role: "assistant", text: response }];
+      });
+    } catch (err) {
+      setChatMessages((prev) => {
+        const filtered = prev.filter((m) => m.text !== "✍️ Thinking...");
+        return [...filtered, { role: "assistant", text: "I encountered an error querying the analyst engine." }];
+      });
+    }
   }
+
 
   return (
     <div className="shell">
@@ -109,10 +118,6 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
           </div>
 
           <div className="topnav-actions">
-            <div className="chip-online">
-              <span className="chip-dot-green" />
-              <span>Python Engine Live</span>
-            </div>
             <button
               type="button"
               onClick={handleRunScan}
@@ -123,15 +128,17 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
               {isScanning ? "🔄 Scanning..." : "+ Run Signal Scan"}
             </button>
           </div>
+
         </header>
 
         <main>{children}</main>
 
         {/* Footer */}
-        <footer style={{ marginTop: 60, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", fontSize: 12, color: "#64748b" }}>
-          <span><strong style={{ color: "white" }}>MarketIQ AI</strong> · Pure React SPA + Python FastAPI Core Backend</span>
-          <span>Powered by LangGraph, Python 3.11 & PostgreSQL</span>
+        <footer style={{ marginTop: 60, paddingTop: 24, borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-tertiary)" }}>
+          <span><strong style={{ color: "var(--text-primary)" }}>MarketIQ AI</strong></span>
+          <span>All rights reserved &copy; 2026</span>
         </footer>
+
 
         {/* Floating AI Assistant Drawer */}
         <button
@@ -156,11 +163,22 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
             </div>
             <div className="ai-chat-messages">
               {chatMessages.map((msg, i) => (
-                <div key={i} className={`ai-chat-msg ${msg.role}`}>
-                  {msg.text}
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+                    width: "100%"
+                  }}
+                >
+                  <div className={`ai-chat-msg msg-${msg.role}`}>
+                    {msg.text}
+                  </div>
                 </div>
               ))}
             </div>
+
+
             <form onSubmit={handleSendChat} className="ai-chat-input-row">
               <input
                 type="text"

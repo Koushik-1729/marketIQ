@@ -6,7 +6,8 @@ from __future__ import annotations
 import math
 from datetime import datetime
 from uuid import uuid4
-from fastapi import APIRouter, BackgroundTasks, status, Query
+from fastapi import APIRouter, BackgroundTasks, status, Query, Body
+
 import structlog
 
 from app.application.use_cases.search_signals import execute_hybrid_search
@@ -158,3 +159,44 @@ async def search_signals(
         "page": current_page,
         "totalPages": total_pages
     }
+
+
+@router.post("/chat", status_code=status.HTTP_200_OK)
+async def chat_with_analyst(message: str = Body(..., embed=True)):
+    """Ask configured LLM analyst about stock setups, filings, or active signals."""
+    try:
+        from app.core.llm import get_llm
+        llm = get_llm()
+        
+        # Pull active signals to give context to the LLM
+        signals_resp = await list_signals(limit=50, offset=0)
+        items = signals_resp.get("items", [])
+        
+        sig_texts = []
+        for i, s in enumerate(items):
+            sig_texts.append(
+                f"{i+1}. Ticker: {s.get('ticker')}, Company: {s.get('company')}, "
+                f"Event: {s.get('eventType')}, Summary: {s.get('eventSummary')}, "
+                f"Sentiment: {s.get('sentiment')}, Score: {s.get('impactScore')}"
+            )
+        
+        context_str = "\n".join(sig_texts) if sig_texts else "No active signals found in database."
+        
+        prompt = (
+            "You are MarketIQ AI Analyst, a high-conviction financial advisor specialized in Indian Equities (NSE/BSE).\n"
+            "You are given the following list of active signals parsed from NSE/BSE corporate filings:\n"
+            f"{context_str}\n\n"
+            f"User asks: {message}\n"
+            "Answer clearly and concisely based on the signal context above. Keep the response to 1-3 sentences maximum."
+        )
+        
+        response = await llm.ainvoke(prompt)
+        text = response.content if hasattr(response, "content") else str(response)
+        return {"response": text}
+    except Exception as exc:
+        log.error("analyst_chat_error", error=str(exc))
+        return {
+            "response": f"I detected a database/LLM connection issue: {str(exc)}. "
+                        f"Please check your engine configuration or verify settings in your .env configuration."
+        }
+

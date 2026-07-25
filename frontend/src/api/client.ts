@@ -47,3 +47,32 @@ export async function fetchHealth() {
     return null;
   }
 }
+
+export async function fetchLatestReport() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/reports/latest`);
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`);
+    const data = await res.json();
+    return data.report || "No premarket report generated yet.";
+  } catch (err) {
+    console.warn("Python backend reports connection fallback:", err);
+    return "Failed to fetch premarket intelligence briefing from Python core backend.";
+  }
+}
+
+export async function sendChatMessage(message: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/signals/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+    if (!res.ok) throw new Error(`API error: ${res.statusText}`);
+    const data = await res.json();
+    return data.response;
+  } catch (err) {
+    console.warn("Python backend chat connection fallback:", err);
+    return "I am currently operating in offline mode. Please ensure the MarketIQ Python engine is running to enable live LLM synthesis.";
+
+  }
+}

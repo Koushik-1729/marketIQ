@@ -1,8 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Signal } from "../components/SignalTable";
 
-export function WatchlistPage() {
-  const [tickers, setTickers] = useState(["ABB", "SBIN", "TATACONSUM", "BANKBARODA"]);
+type WatchlistPageProps = {
+  signals: Signal[];
+};
+
+export function WatchlistPage({ signals }: WatchlistPageProps) {
+  const [tickers, setTickers] = useState<string[]>([]);
   const [newTicker, setNewTicker] = useState("");
+
+  // Initialize tracked tickers dynamically from backend database signals
+  useEffect(() => {
+    if (signals && signals.length > 0) {
+      const activeTickers = Array.from(new Set(signals.map((s) => s.ticker.toUpperCase())));
+      setTickers(activeTickers);
+    }
+  }, [signals]);
 
   function handleAddTicker(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +36,7 @@ export function WatchlistPage() {
       <section className="hero-panel">
         <div className="eyebrow">Personal Watchlist</div>
         <h1 className="headline">
-          Personalized alert <span className="text-highlight">radar</span>.
+          Personalized alert <span>radar</span>.
         </h1>
         <p className="subtext">Custom ticker tracking with customized risk tolerance.</p>
       </section>
@@ -45,10 +58,10 @@ export function WatchlistPage() {
             style={{
               flex: 1,
               padding: "12px 18px",
-              borderRadius: "999px",
-              background: "rgba(192, 115, 206, 0.1)",
-              border: "1px solid rgba(192, 115, 206, 0.3)",
-              color: "#fff",
+              borderRadius: "10px",
+              background: "#ffffff",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-primary)",
               outline: "none"
             }}
           />
@@ -58,22 +71,28 @@ export function WatchlistPage() {
         </form>
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          {tickers.map((t) => (
-            <div
-              key={t}
-              className="ticker-pill"
-              style={{ display: "inline-flex", alignItems: "center", gap: "10px", padding: "8px 16px" }}
-            >
-              <span>{t}</span>
-              <button
-                type="button"
-                onClick={() => handleRemove(t)}
-                style={{ background: "none", border: "none", color: "#fb7185", cursor: "pointer", fontWeight: 800 }}
-              >
-                ✕
-              </button>
+          {tickers.length === 0 ? (
+            <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>
+              Watchlist is empty. Add a ticker above to track.
             </div>
-          ))}
+          ) : (
+            tickers.map((t) => (
+              <div
+                key={t}
+                className="ticker-pill"
+                style={{ display: "inline-flex", alignItems: "center", gap: "10px", padding: "8px 16px" }}
+              >
+                <span>{t}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(t)}
+                  style={{ background: "none", border: "none", color: "var(--tone-rose)", cursor: "pointer", fontWeight: 800 }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>

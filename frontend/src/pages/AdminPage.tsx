@@ -17,8 +17,9 @@ export function AdminPage() {
       <section className="hero-panel">
         <div className="eyebrow">System Health & Admin</div>
         <h1 className="headline">
-          Core Engine <span className="text-highlight">observability</span>.
+          Core Engine <span>observability</span>.
         </h1>
+
         <p className="subtext">Monitor Python backend health, source credibility, and ingestion jobs.</p>
       </section>
 
@@ -32,19 +33,16 @@ export function AdminPage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
           <div className="compact-stat">
-            <span className="eyebrow">Python API Server</span>
-            <span className="chip-online">ONLINE (Port 8001)</span>
+            <span className="eyebrow">API Status</span>
+            <span className="chip-online">ACTIVE</span>
           </div>
           <div className="compact-stat">
-            <span className="eyebrow">PostgreSQL DB</span>
+            <span className="eyebrow">Database Connection</span>
             <span className="chip-online">CONNECTED</span>
-          </div>
-          <div className="compact-stat">
-            <span className="eyebrow">Architecture</span>
-            <strong style={{ fontSize: "16px", color: "#C073CE" }}>Clean Architecture</strong>
           </div>
         </div>
       </section>
     </div>
+
   );
 }

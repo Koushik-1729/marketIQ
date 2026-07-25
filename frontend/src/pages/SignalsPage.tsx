@@ -29,12 +29,10 @@ export function SignalsPage({
           <div>
             <div className="eyebrow">Signals Feed</div>
             <h1 className="headline">
-              Ranked setups, conflict checks, and <span className="text-highlight">reason clarity</span>.
+              Ranked setups, conflict checks, and <span>reason clarity</span>.
             </h1>
-            <p className="subtext">
-              Literature-backed Reciprocal Rank Fusion (RRF k=60) hybrid search engine running in Python.
-            </p>
           </div>
+
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div className="eyebrow">RRF Hybrid Search</div>
@@ -45,10 +43,10 @@ export function SignalsPage({
               placeholder="Search ticker (e.g. ABB, SBIN)..."
               style={{
                 padding: "12px 20px",
-                borderRadius: "999px",
-                background: "rgba(192, 115, 206, 0.12)",
-                border: "1px solid rgba(192, 115, 206, 0.35)",
-                color: "#ffffff",
+                borderRadius: "10px",
+                background: "#ffffff",
+                border: "1px solid var(--border-subtle)",
+                color: "var(--text-primary)",
                 fontSize: "14px",
                 outline: "none"
               }}
@@ -57,19 +55,20 @@ export function SignalsPage({
         </div>
       </section>
 
-      <section className="glass-card">
-        <div className="panel-title">
+      <section className="glass-card" style={{ position: "relative" }}>
+        <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div>
             <div className="eyebrow">Signals Table</div>
             <h3>Ranked Feed ({totalCount})</h3>
           </div>
+          {loading && (
+            <span style={{ fontSize: "13px", color: "var(--sky-blue)", fontWeight: 600 }}>
+              🔄 Fetching updates...
+            </span>
+          )}
         </div>
 
-        {loading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#C073CE" }}>
-            ⚡ Loading signals from Python FastAPI backend...
-          </div>
-        ) : (
+        <div style={{ opacity: loading ? 0.6 : 1, transition: "opacity 0.15s ease" }}>
           <SignalTable
             signals={signals}
             page={page}
@@ -77,7 +76,7 @@ export function SignalsPage({
             totalCount={totalCount}
             onPageChange={onPageChange}
           />
-        )}
+        </div>
       </section>
     </div>
   );
